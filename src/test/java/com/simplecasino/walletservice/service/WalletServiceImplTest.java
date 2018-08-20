@@ -1,11 +1,10 @@
-package com.simplecasino.walletservice;
+package com.simplecasino.walletservice.service;
 
 import com.simplecasino.walletservice.dao.WalletDao;
 import com.simplecasino.walletservice.exception.InsufficientBalanceException;
 import com.simplecasino.walletservice.exception.PlayerAlreadyExistException;
 import com.simplecasino.walletservice.model.Balance;
 import com.simplecasino.walletservice.model.Player;
-import com.simplecasino.walletservice.service.WalletServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
