@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simplecasino.walletservice.dao.WalletDao;
 import com.simplecasino.walletservice.dto.RegisterPlayerRequest;
 import com.simplecasino.walletservice.dto.UpdateBalanceRequest;
-import com.simplecasino.walletservice.exception.InsufficientBalanceException;
 import com.simplecasino.walletservice.model.Balance;
 import com.simplecasino.walletservice.model.Player;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,23 +17,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.CoreMatchers.is;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
@@ -51,9 +44,11 @@ public class WalletControllerIntegrationTest {
     @Autowired
     private WalletDao walletDao;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    public void registerPlayer_ifIdNotExist_thenReturnPlayerBalanceZero() throws Exception {
-        //Player player = new Player(4L, new Balance());
+    public void registerPlayer_ifIdNotExist_thenReturnHttpStatus200AndPlayerBalanceZero() throws Exception {
         RegisterPlayerRequest registerPlayerRequest = new RegisterPlayerRequest();
         registerPlayerRequest.setPlayerId(new Random().nextLong());
 
@@ -70,7 +65,7 @@ public class WalletControllerIntegrationTest {
 
     @Test
     public void registerPlayer_ifIdAlreadyExist_thenReturnHttpStatus409() throws Exception {
-        Long playerId = 1L;
+        Long playerId = getId();
         walletDao.save(new Player(playerId, new Balance()));
 
         RegisterPlayerRequest registerPlayerRequest = new RegisterPlayerRequest();
@@ -89,57 +84,115 @@ public class WalletControllerIntegrationTest {
 
     @Test
     public void updateBalance_ifPlayerNotFoundById_thenReturnHttpStatus404() throws Exception {
-        Long playerId = 1L;
+        Long playerId = getId();
 
         UpdateBalanceRequest updateBalanceRequest = new UpdateBalanceRequest();
         updateBalanceRequest.setBalance(BigDecimal.ONE);
 
         mvc.perform(
-                put(String.format("player/%s/balance", playerId))
+                put(String.format("/wallet/player/%s/balance", playerId))
                         .content(asJsonString(updateBalanceRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
-                //.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is(String.format("Player with id '%s' not found", playerId))));
     }
 
-    /*@Test
-    public void updateBalance_ifPlayerFoundByIdAndPositiveUpdatedBalance_thenReturnPlayerWithUpdatedBalance() {
-        Player player = new Player(TEST_ID, new Balance());
+    @Test
+    public void updateBalance_ifPlayerFoundByIdAndPositiveUpdatedBalance_thenReturnHttpStatus200AndUpdatedBalance() throws Exception {
+        Long playerId = getId();
+        walletDao.save(new Player(playerId, new Balance()));
 
-        when(walletDao.findById(TEST_ID)).thenReturn(Optional.of(player));
-        Optional<Player> updatedPlayer = walletService.updateBalance(TEST_ID, BigDecimal.ONE);
+        UpdateBalanceRequest updateBalanceRequest = new UpdateBalanceRequest();
+        updateBalanceRequest.setBalance(BigDecimal.TEN);
 
-        assertTrue(updatedPlayer.isPresent());
-        assertEquals(BigDecimal.ONE, player.getBalance().getAmount());
+        mvc.perform(
+                put(String.format("/wallet/player/%s/balance", playerId))
+                        .content(asJsonString(updateBalanceRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.balance", is(BigDecimal.TEN.doubleValue())));
+
+        walletDao.deleteById(playerId);
     }
 
     @Test
-    public void updateBalance_ifPlayerFoundByIdAndNegativeUpdatedBalanceAndEnoughFunds_thenReturnPlayerWithUpdatedBalance() {
-        Player player = new Player(TEST_ID, new Balance(BigDecimal.TEN));
+    public void updateBalance_ifPlayerFoundByIdAndNegativeUpdatedBalanceAndNotEnoughFunds_thenReturnHttpStatus409AndCurrentBalance() throws Exception {
+        Long playerId = getId();
+        walletDao.save(new Player(playerId, new Balance(BigDecimal.ONE)));
 
-        when(walletDao.findById(TEST_ID)).thenReturn(Optional.of(player));
-        Optional<Player> updatedPlayer = walletService.updateBalance(TEST_ID, BigDecimal.valueOf(-4));
+        UpdateBalanceRequest updateBalanceRequest = new UpdateBalanceRequest();
+        updateBalanceRequest.setBalance(BigDecimal.valueOf(-2));
 
-        assertTrue(updatedPlayer.isPresent());
-        assertEquals(BigDecimal.valueOf(6), player.getBalance().getAmount());
+        mvc.perform(
+                put(String.format("/wallet/player/%s/balance", playerId))
+                        .content(asJsonString(updateBalanceRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(HttpStatus.CONFLICT.value()))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", is("Insufficient funds")))
+                .andExpect(jsonPath("$.balance", is(BigDecimal.ONE.doubleValue())));
+
+        walletDao.deleteById(playerId);
     }
 
-    @Test(expected = InsufficientBalanceException.class)
-    public void updateBalance_ifPlayerFoundByIdAndNegativeUpdatedBalanceAndNotEnoughFunds_thenThrowInsufficientBalanceException() {
-        Player player = new Player(TEST_ID, new Balance(BigDecimal.ONE));
+    @Test
+    public void updateBalance_ifPlayerFoundByIdAndNegativeUpdatedBalanceAndEnoughFunds_thenReturnHttpStatus200AndUpdatedBalance() throws Exception {
+        Long playerId = getId();
+        walletDao.save(new Player(playerId, new Balance(BigDecimal.TEN)));
 
-        when(walletDao.findById(TEST_ID)).thenReturn(Optional.of(player));
-        walletService.updateBalance(TEST_ID, BigDecimal.valueOf(-4));
-    }*/
+        UpdateBalanceRequest updateBalanceRequest = new UpdateBalanceRequest();
+        updateBalanceRequest.setBalance(BigDecimal.valueOf(-2));
+
+        mvc.perform(
+                put(String.format("/wallet/player/%s/balance", playerId))
+                        .content(asJsonString(updateBalanceRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.balance", is(BigDecimal.valueOf(8).doubleValue())));
+
+        walletDao.deleteById(playerId);
+    }
+
+    @Test
+    public void getBalance_ifPlayerFoundById_theReturnHttpStatus200AndPlayerBalance() throws Exception {
+        Long playerId = getId();
+        walletDao.save(new Player(playerId, new Balance(BigDecimal.TEN)));
+
+        mvc.perform(
+                get(String.format("/wallet/player/%s/balance", playerId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.balance", is(BigDecimal.TEN.doubleValue())));
+
+        walletDao.deleteById(playerId);
+    }
+
+    @Test
+    public void getBalance_ifPlayerNotFoundById_theReturnHttpStatus404() throws Exception {
+        Long playerId = getId();
+
+        mvc.perform(
+                get(String.format("/wallet/player/%s/balance", playerId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message", is(String.format("Player with id '%s' not found", playerId))));
+    }
+
+    @After
+    public void cleanDb() {
+        walletDao.deleteAll();
+    }
 
     private String asJsonString(Object obj) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(obj);
+        return objectMapper.writeValueAsString(obj);
     }
 
-    private <T> T fromJsonString(String value, Class<T> clazz) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(value, clazz);
+    private Long getId() {
+        return new Random().nextLong();
     }
 }
