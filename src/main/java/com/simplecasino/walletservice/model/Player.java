@@ -23,6 +23,9 @@ public class Player {
     @NotNull
     private Balance balance;
 
+    private Player() {
+    }
+
     public Player(Long id, @NotNull Balance balance) {
         this.id = id;
         this.balance = balance;

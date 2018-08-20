@@ -1,4 +1,4 @@
-package com.simplecasino.walletservice;
+package com.simplecasino.walletservice.dto;
 
 public class RegisterPlayerRequest {
 
