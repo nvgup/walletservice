@@ -20,3 +20,11 @@ spring:
     baseline-on-migrate: true
     user: simplecasino
     password: simplecasino
+
+server:
+  port: 8763
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka
