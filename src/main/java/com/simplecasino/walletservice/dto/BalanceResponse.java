@@ -7,25 +7,25 @@ import java.math.BigDecimal;
 public class BalanceResponse {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String message;
+    private String error;
 
     private BigDecimal balance;
 
-    public BalanceResponse(String message, BigDecimal balance) {
+    public BalanceResponse(String error, BigDecimal balance) {
         this(balance);
-        this.message = message;
+        this.error = error;
     }
 
     public BalanceResponse(BigDecimal balance) {
         this.balance = balance;
     }
 
-    public String getMessage() {
-        return message;
+    public String getError() {
+        return error;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setError(String error) {
+        this.error = error;
     }
 
     public BigDecimal getBalance() {

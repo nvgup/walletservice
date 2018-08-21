@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(value = "/wallet", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+@RequestMapping(produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
 public class WalletController {
 
     private WalletService walletService;

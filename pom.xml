@@ -66,8 +66,8 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
             <version>${h2database.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -53,7 +53,7 @@ public class WalletControllerIntegrationTest {
         registerPlayerRequest.setPlayerId(new Random().nextLong());
 
         mvc.perform(
-                post("/wallet/player")
+                post("/player")
                         .content(asJsonString(registerPlayerRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -72,7 +72,7 @@ public class WalletControllerIntegrationTest {
         registerPlayerRequest.setPlayerId(playerId);
 
         mvc.perform(
-                post("/wallet/player")
+                post("/player")
                         .content(asJsonString(registerPlayerRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.CONFLICT.value()))
@@ -90,7 +90,7 @@ public class WalletControllerIntegrationTest {
         updateBalanceRequest.setBalance(BigDecimal.ONE);
 
         mvc.perform(
-                put(String.format("/wallet/player/%s/balance", playerId))
+                put(String.format("/player/%s/balance", playerId))
                         .content(asJsonString(updateBalanceRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
@@ -107,7 +107,7 @@ public class WalletControllerIntegrationTest {
         updateBalanceRequest.setBalance(BigDecimal.TEN);
 
         mvc.perform(
-                put(String.format("/wallet/player/%s/balance", playerId))
+                put(String.format("/player/%s/balance", playerId))
                         .content(asJsonString(updateBalanceRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -126,12 +126,12 @@ public class WalletControllerIntegrationTest {
         updateBalanceRequest.setBalance(BigDecimal.valueOf(-2));
 
         mvc.perform(
-                put(String.format("/wallet/player/%s/balance", playerId))
+                put(String.format("/player/%s/balance", playerId))
                         .content(asJsonString(updateBalanceRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.CONFLICT.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message", is("Insufficient funds")))
+                .andExpect(jsonPath("$.error", is("Insufficient funds")))
                 .andExpect(jsonPath("$.balance", is(BigDecimal.ONE.doubleValue())));
 
         walletDao.deleteById(playerId);
@@ -146,7 +146,7 @@ public class WalletControllerIntegrationTest {
         updateBalanceRequest.setBalance(BigDecimal.valueOf(-2));
 
         mvc.perform(
-                put(String.format("/wallet/player/%s/balance", playerId))
+                put(String.format("/player/%s/balance", playerId))
                         .content(asJsonString(updateBalanceRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -162,7 +162,7 @@ public class WalletControllerIntegrationTest {
         walletDao.save(new Player(playerId, new Balance(BigDecimal.TEN)));
 
         mvc.perform(
-                get(String.format("/wallet/player/%s/balance", playerId))
+                get(String.format("/player/%s/balance", playerId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -176,7 +176,7 @@ public class WalletControllerIntegrationTest {
         Long playerId = getId();
 
         mvc.perform(
-                get(String.format("/wallet/player/%s/balance", playerId))
+                get(String.format("/player/%s/balance", playerId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
