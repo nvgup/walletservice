@@ -13,7 +13,7 @@ public class Balance {
     @NotNull
     @Column(name = "balance")
     @Digits(integer = 10, fraction = 2)
-    @Min(value = 0, message = "")
+    @Min(value = 0)
     private BigDecimal amount;
 
     public Balance() {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simplecasino.walletservice.dao.WalletDao;
 import com.simplecasino.walletservice.dto.RegisterPlayerRequest;
 import com.simplecasino.walletservice.dto.UpdateBalanceRequest;
+import com.simplecasino.walletservice.exception.RestApiException;
 import com.simplecasino.walletservice.model.Balance;
 import com.simplecasino.walletservice.model.Player;
 import org.junit.After;
@@ -77,7 +78,9 @@ public class WalletControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.CONFLICT.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message", is(String.format("Player with id '%s' already registered", playerId))));
+                .andExpect(jsonPath("$.status", is(HttpStatus.CONFLICT.value())))
+                .andExpect(jsonPath("$.message", is(RestApiException.Type.PLAYER_ALREADY_EXIST.getMessage())))
+                .andExpect(jsonPath("$.code", is(RestApiException.Type.PLAYER_ALREADY_EXIST.getCode())));
 
         walletDao.deleteById(registerPlayerRequest.getPlayerId());
     }
@@ -95,7 +98,9 @@ public class WalletControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message", is(String.format("Player with id '%s' not found", playerId))));
+                .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
+                .andExpect(jsonPath("$.message", is(RestApiException.Type.PLAYER_NOT_FOUND.getMessage())))
+                .andExpect(jsonPath("$.code", is(RestApiException.Type.PLAYER_NOT_FOUND.getCode())));
     }
 
     @Test
@@ -131,8 +136,8 @@ public class WalletControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.CONFLICT.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.error", is("Insufficient funds")))
-                .andExpect(jsonPath("$.balance", is(BigDecimal.ONE.doubleValue())));
+                .andExpect(jsonPath("$.message", is("Insufficient funds")))
+                .andExpect(jsonPath("$.additionalInfo.balance", is(BigDecimal.ONE.doubleValue())));
 
         walletDao.deleteById(playerId);
     }
@@ -173,14 +178,14 @@ public class WalletControllerIntegrationTest {
 
     @Test
     public void getBalance_ifPlayerNotFoundById_theReturnHttpStatus404() throws Exception {
-        Long playerId = getId();
-
         mvc.perform(
-                get(String.format("/player/%s/balance", playerId))
+                get(String.format("/player/%s/balance", getId()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(HttpStatus.NOT_FOUND.value()))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message", is(String.format("Player with id '%s' not found", playerId))));
+                .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
+                .andExpect(jsonPath("$.message", is(RestApiException.Type.PLAYER_NOT_FOUND.getMessage())))
+                .andExpect(jsonPath("$.code", is(RestApiException.Type.PLAYER_NOT_FOUND.getCode())));
     }
 
     @After

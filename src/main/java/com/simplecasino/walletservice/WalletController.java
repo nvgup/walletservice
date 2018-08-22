@@ -3,7 +3,7 @@ package com.simplecasino.walletservice;
 import com.simplecasino.walletservice.dto.BalanceResponse;
 import com.simplecasino.walletservice.dto.RegisterPlayerRequest;
 import com.simplecasino.walletservice.dto.UpdateBalanceRequest;
-import com.simplecasino.walletservice.exception.ResourceNotFoundException;
+import com.simplecasino.walletservice.exception.RestApiException;
 import com.simplecasino.walletservice.model.Player;
 import com.simplecasino.walletservice.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +41,18 @@ public class WalletController {
                                          @RequestBody UpdateBalanceRequest updateBalanceRequest) {
         Optional<Player> player = walletService.updateBalance(id, updateBalanceRequest.getBalance());
 
-        return getBalanceResponseFromOptPlayer(player, id);
+        return getBalanceResponseFromOptPlayer(player);
     }
 
     @GetMapping("/player/{id}/balance")
     public BalanceResponse getBalance(@PathVariable Long id) {
         Optional<Player> player = walletService.findById(id);
 
-        return getBalanceResponseFromOptPlayer(player, id);
+        return getBalanceResponseFromOptPlayer(player);
     }
 
-    private BalanceResponse getBalanceResponseFromOptPlayer(Optional<Player> player, Long playerId) {
+    private BalanceResponse getBalanceResponseFromOptPlayer(Optional<Player> player) {
         return player.map(p -> new BalanceResponse(p.getBalance().getAmount()))
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Player with id '%s' not found", playerId)));
+                .orElseThrow(() -> new RestApiException(RestApiException.Type.PLAYER_NOT_FOUND));
     }
 }

@@ -2,7 +2,7 @@ package com.simplecasino.walletservice.service;
 
 import com.simplecasino.walletservice.dao.WalletDao;
 import com.simplecasino.walletservice.exception.InsufficientBalanceException;
-import com.simplecasino.walletservice.exception.PlayerAlreadyExistException;
+import com.simplecasino.walletservice.exception.RestApiException;
 import com.simplecasino.walletservice.model.Balance;
 import com.simplecasino.walletservice.model.Player;
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class WalletServiceImplTest {
         assertEquals(player, returnedPlayer);
     }
 
-    @Test(expected = PlayerAlreadyExistException.class)
+    @Test(expected = RestApiException.class)
     public void registerPlayer_ifIdAlreadyExist_thenThrowPlayerAlreadyExistException() {
         when(walletDao.existsById(TEST_ID)).thenReturn(true);
         walletService.registerPlayer(TEST_ID);
