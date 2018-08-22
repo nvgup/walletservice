@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class CustomResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {RestApiException.class})
-    protected ResponseEntity<?> handlePlayerAlreadyExistException(RestApiException ex, WebRequest webRequest) {
+    protected ResponseEntity<?> handleRestApiException(RestApiException ex, WebRequest webRequest) {
         ApiError apiError = new ApiError(ex.getType());
 
         return handleExceptionInternal(ex, apiError, new HttpHeaders(),
