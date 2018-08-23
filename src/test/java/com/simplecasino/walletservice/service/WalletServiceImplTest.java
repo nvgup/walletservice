@@ -43,7 +43,7 @@ public class WalletServiceImplTest {
     }
 
     @Test(expected = RestApiException.class)
-    public void registerPlayer_ifIdAlreadyExist_thenThrowPlayerAlreadyExistException() {
+    public void registerPlayer_ifIdAlreadyExist_thenThrowRestApiExceptionException() {
         when(walletDao.existsById(TEST_ID)).thenReturn(true);
         walletService.registerPlayer(TEST_ID);
     }

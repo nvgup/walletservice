@@ -60,8 +60,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.balance", is(0)));
-
-        walletDao.deleteById(registerPlayerRequest.getPlayerId());
     }
 
     @Test
@@ -81,8 +79,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(jsonPath("$.status", is(HttpStatus.CONFLICT.value())))
                 .andExpect(jsonPath("$.message", is(RestApiException.Type.PLAYER_ALREADY_EXIST.getMessage())))
                 .andExpect(jsonPath("$.code", is(RestApiException.Type.PLAYER_ALREADY_EXIST.getCode())));
-
-        walletDao.deleteById(registerPlayerRequest.getPlayerId());
     }
 
     @Test
@@ -118,8 +114,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.balance", is(BigDecimal.TEN.doubleValue())));
-
-        walletDao.deleteById(playerId);
     }
 
     @Test
@@ -138,8 +132,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message", is("Insufficient funds")))
                 .andExpect(jsonPath("$.additionalInfo.balance", is(BigDecimal.ONE.doubleValue())));
-
-        walletDao.deleteById(playerId);
     }
 
     @Test
@@ -157,8 +149,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.balance", is(BigDecimal.valueOf(8).doubleValue())));
-
-        walletDao.deleteById(playerId);
     }
 
     @Test
@@ -172,8 +162,6 @@ public class WalletControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.balance", is(BigDecimal.TEN.doubleValue())));
-
-        walletDao.deleteById(playerId);
     }
 
     @Test
