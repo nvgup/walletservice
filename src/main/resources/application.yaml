@@ -24,9 +24,11 @@ spring:
     password: simplecasino
 
 server:
-  port: 8763
+  port: ${PORT:0}
 
 eureka:
   client:
     service-url:
       default-zone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

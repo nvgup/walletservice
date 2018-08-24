@@ -17,3 +17,10 @@ spring:
         ddl-auto: create
   flyway:
     enabled: false
+
+server:
+  port: 8763
+
+eureka:
+  client:
+    enabled: false
