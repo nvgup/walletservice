@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:test
+    username:
+    password:
+    hikari:
+      connection-timeout: 20000
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 6000
+      max-lifetime: 12000
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        ddl-auto: create
+  flyway:
+    enabled: false
